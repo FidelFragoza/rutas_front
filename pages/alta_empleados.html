@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Formulario Crear Chofer</title>
+    <script type="module" src="/src/main.js"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex items-center">
+
+    <div class="container mx-auto min-h-screen flex flex-col md:flex-row items-start justify-center">
+        <!-- Formulario -->
+        <div class="w-full md:w-1/2 flex justify-center items-center">
+            <form id="formChofer" class="w-[80%] my-3 bg-white shadow-lg rounded-2xl p-6">
+                <h2 class="text-2xl font-bold mb-6 text-gray-700">Crear Chofer</h2>
+
+                <div class="mb-4">
+                    <label for="selectCiudad" class="block mb-1 font-medium text-gray-700">Ciudad Asignada</label>
+                    <select id="selectCiudad" name="ciudadId" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label for="nombre" class="block mb-1 font-medium text-gray-700">Nombre</label>
+                    <input type="text" id="nombre" name="nombre" required maxlength="15" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+"
+                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                </div>
+
+                <div class="mb-4">
+                    <label for="apellidoPaterno" class="block mb-1 font-medium text-gray-700">Apellido Paterno</label>
+                    <input type="text" id="apellidoPaterno" name="apellidoPaterno" required maxlength="15" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+"
+                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                </div>
+
+                <div class="mb-4">
+                    <label for="apellidoMaterno" class="block mb-1 font-medium text-gray-700">Apellido Materno</label>
+                    <input type="text" id="apellidoMaterno" name="apellidoMaterno" required maxlength="15" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+"
+                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                </div>
+
+                <div class="mb-4">
+                    <label for="fechaNacimiento" class="block mb-1 font-medium text-gray-700">Fecha de
+                        Nacimiento</label>
+                    <input type="date" id="fechaNacimiento" name="fechaNacimiento" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                </div>
+
+                <div class="mb-4">
+                    <label for="sueldo" class="block mb-1 font-medium text-gray-700">Sueldo</label>
+                    <input type="number" step="0.01" min="0" id="sueldo" name="sueldo" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
+                </div>
+
+                <div class="mb-4 flex items-center">
+                    <input type="checkbox" id="activo" name="activo" class="mr-2" checked />
+                    <label for="activo" class="font-medium text-gray-700">Activo</label>
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded shadow transition duration-150">
+                    Crear Chofer
+                </button>
+            </form>
+        </div>
+
+        <!-- Imagen decorativa -->
+        <div class="hidden md:flex md:w-1/2 w-full h-screen bg-amber-100">
+            <img src="../public/nuevos_empleados.png" alt="Descripción de la imagen"
+                class="object-cover w-full h-full rounded-lg" />
+        </div>
+
+
+
+        <div id="customAlert" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+            <!-- Fondo oscuro semitransparente -->
+            <div class="absolute inset-0 bg-black opacity-30"></div>
+
+            <!-- Contenido alerta, sin opacidad -->
+            <div class="relative bg-white text-gray-800 px-6 py-4 rounded-lg shadow-lg max-w-sm w-full text-center">
+                <p id="customAlertMessage" class="text-lg font-semibold"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function cargarCiudades() {
+            const res = await fetch('http://localhost:8080/api/ciudades');
+            const ciudades = await res.json();
+            const select = document.getElementById('selectCiudad');
+            select.innerHTML = '';
+            ciudades.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c.id;
+                option.textContent = c.nombre;
+                select.appendChild(option);
+            });
+        }
+
+        window.onload = async () => {
+            await cargarCiudades();
+        };
+
+        function showCustomAlert(message) {
+            const alertDiv = document.getElementById('customAlert');
+            const msg = document.getElementById('customAlertMessage');
+            msg.textContent = message;
+            alertDiv.classList.remove('hidden');
+
+            setTimeout(() => {
+                alertDiv.classList.add('hidden');
+            }, 3000);
+        }
+
+        document.getElementById('formChofer').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const data = {
+                ciudadId: parseInt(form.ciudadId.value),
+                nombre: form.nombre.value,
+                apellidoPaterno: form.apellidoPaterno.value,
+                apellidoMaterno: form.apellidoMaterno.value,
+                fechaNacimiento: form.fechaNacimiento.value,
+                sueldo: parseFloat(form.sueldo.value),
+                activo: form.activo.checked,
+            };
+
+            const res = await fetch('http://localhost:8080/api/choferes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+
+            if (res.ok) {
+                showCustomAlert('Chofer creado con éxito');
+                form.reset();
+            } else {
+                try {
+                    const error = await res.json();
+                    showCustomAlert(error.message);
+                } catch {
+                    const errorText = await res.text();
+                    showCustomAlert('Error al crear chofer: ' + errorText);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

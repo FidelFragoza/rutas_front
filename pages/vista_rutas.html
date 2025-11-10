@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Administrar Rutas</title>
+    <script type="module" src="/src/main.js"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen p-6">
+    <h1 class="text-3xl font-bold mb-6">Administrar Rutas</h1>
+
+    <!-- Selección Ciudad y filtro Ruta -->
+    <div class="flex flex-col md:flex-row gap-4 mb-6">
+        <select id="selectCiudad" class="border px-3 py-2 rounded shadow w-full md:w-1/3">
+            <option value="">Seleccione</option>
+            <!-- Ciudades cargadas dinámicamente -->
+        </select>
+
+        <input type="text" id="inputFiltroRuta" placeholder="Buscar ruta"
+            class="border px-3 py-2 rounded shadow w-full md:w-1/3" />
+    </div>
+
+    <!-- Tabla de Rutas -->
+    <table class="min-w-full bg-white rounded shadow overflow-hidden">
+        <thead>
+            <tr class="bg-blue-500 text-white text-left">
+                <th class="px-4 py-2">ID Ruta</th>
+                <th class="px-4 py-2">Nombre Ruta</th>
+                <th class="px-4 py-2">Tipo Servicio</th>
+                <th class="px-4 py-2">Capacidad</th>
+                <th class="px-4 py-2">Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody id="rutasTableBody">
+            <!-- Rutas cargadas dinámicamente -->
+        </tbody>
+    </table>
+
+    <!-- Modal para modificar ruta -->
+    <div id="modalModificar" class="fixed inset-0 flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-black opacity-30"></div>
+        <div class="relative bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 class="text-xl font-bold mb-4">Modificar Ruta</h2>
+            <form id="formModificar">
+                <div class="mb-4">
+                    <label for="modNombreRuta" class="block font-medium text-gray-700">Nombre Ruta</label>
+                    <input type="text" id="modNombreRuta" required
+                        class="w-full border px-3 py-2 rounded bg-gray-100 cursor-not-allowed opacity-70" />
+                </div>
+                <div class="mb-4">
+                    <label for="modChofer" class="block font-medium text-gray-700">Chofer</label>
+                    <select id="modChofer" required class="w-full border px-3 py-2 rounded">
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="modTipoServicio" class="block font-medium text-gray-700">Tipo Servicio</label>
+                    <select id="modTipoServicio" required class="w-full border px-3 py-2 rounded">
+                        <option value="Personal">Personal</option>
+                        <option value="Articulos">Artículos</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="modCapacidad" class="block font-medium text-gray-700">Capacidad</label>
+                    <input type="number" id="modCapacidad" min="1" required class="w-full border px-3 py-2 rounded" />
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" id="btnCancelarModificar"
+                        class="px-4 py-2 bg-gray-400 rounded hover:bg-gray-500 text-white font-semibold">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btnGuardarModificar"
+                        class="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 text-white font-semibold">
+                        Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="customAlert" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="absolute inset-0 bg-black opacity-30"></div>
+        <div class="relative bg-white text-gray-800 px-6 py-4 rounded-lg shadow-lg max-w-sm w-full text-center">
+            <p id="customAlertMessage" class="text-lg font-semibold"></p>
+        </div>
+    </div>
+
+
+
+    <!-- Mensaje confirmación eliminar -->
+    <div id="modalEliminar" class="fixed inset-0 flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-black opacity-30"></div>
+        <div class="relative bg-white rounded-lg p-6 w-full max-w-md text-center">
+            <p class="mb-4 font-semibold">¿Confirmas que deseas eliminar esta ruta?</p>
+            <div class="flex justify-center gap-4">
+                <button id="btnConfirmarEliminar"
+                    class="px-4 py-2 bg-red-600 rounded text-white font-semibold hover:bg-red-700">Aceptar</button>
+                <button id="btnCancelarEliminar"
+                    class="px-4 py-2 bg-gray-400 rounded text-white font-semibold hover:bg-gray-500">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const selectCiudad = document.getElementById('selectCiudad');
+        const inputFiltroRuta = document.getElementById('inputFiltroRuta');
+        const rutasTableBody = document.getElementById('rutasTableBody');
+
+        const modalModificar = document.getElementById('modalModificar');
+        const formModificar = document.getElementById('formModificar');
+        const modCiudad = document.getElementById('modCiudad');
+        const modNombre = document.getElementById('modNombre');
+        const modApellidoPaterno = document.getElementById('modApellidoPaterno');
+        const modFechaNacimiento = document.getElementById('modFechaNacimiento');
+        const modSueldo = document.getElementById('modSueldo');
+        const btnCancelarModificar = document.getElementById('btnCancelarModificar');
+
+        const modalEliminar = document.getElementById('modalEliminar');
+        const btnConfirmarEliminar = document.getElementById('btnConfirmarEliminar');
+        const btnCancelarEliminar = document.getElementById('btnCancelarEliminar');
+
+        let rutas = [];
+        let rutaSeleccionada = null;
+
+        async function cargarCiudades() {
+            const res = await fetch('http://localhost:8080/api/ciudades');
+            const ciudades = await res.json();
+            const selectCiudad = document.getElementById('selectCiudad');
+            selectCiudad.innerHTML = '<option value="">Seleccione</option>';
+            ciudades.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c.id;
+                option.textContent = c.nombre;
+                selectCiudad.appendChild(option);
+            });
+            selectCiudad.value = "1"; // fija como seleccionada la ciudad con id 1
+            selectCiudad.dispatchEvent(new Event('change')); // opcional según si cargas choferes al cambiar ciudad
+        }
+
+
+        async function cargarRutas(ciudadId) {
+            if (!ciudadId) {
+                rutas = [];
+                renderTablaRutas();
+                return;
+            }
+            const res = await fetch(`http://localhost:8080/api/rutas/porCiudad/${ciudadId}`);
+            rutas = await res.json();
+            renderTablaRutas();
+        }
+
+        function renderTablaRutas() {
+            const filtro = inputFiltroRuta.value.trim().toLowerCase();
+            rutasTableBody.innerHTML = '';
+
+            const filtradas = rutas.filter(r => r.nombreRuta.toLowerCase().includes(filtro));
+            filtradas.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+      <td class="border px-4 py-2">${r.id}</td>
+      <td class="border px-4 py-2">${r.nombreRuta}</td>
+      <td class="border px-4 py-2">${r.tipoServicio}</td>
+      <td class="border px-4 py-2">${r.capacidad}</td>
+      <td class="border px-4 py-2 flex gap-2">
+        <button class="bg-yellow-400 px-2 py-1 rounded text-sm" data-id="${r.id}" data-accion="modificar">Modificar</button>
+        <button class="bg-red-600 px-2 py-1 rounded text-sm text-white" data-id="${r.id}" data-accion="eliminar">Eliminar</button>
+      </td>
+    `;
+                rutasTableBody.appendChild(tr);
+            });
+        }
+
+
+        async function cargarChoferesPorCiudadYSeleccionar(ciudadId, choferIdActual) {
+            const res = await fetch(`http://localhost:8080/api/choferes/filtrarPorCiudad/${ciudadId}`);
+            const choferes = await res.json();
+            const modChofer = document.getElementById('modChofer');
+            modChofer.innerHTML = '';
+            choferes.forEach(chofer => {
+                const option = document.createElement('option');
+                option.value = chofer.id;
+                option.textContent = `${chofer.nombre} ${chofer.apellidoPaterno} ${chofer.apellidoMaterno}`;
+                if (chofer.id === choferIdActual) option.selected = true;
+                modChofer.appendChild(option);
+            });
+        }
+
+
+
+        async function mostrarModalModificar(rutaId) {
+            console.log('Iniciando mostrarModalModificar para rutaId:', rutaId);
+
+            // Cambiar la URL al nuevo endpoint que devuelve choferIdAsignado separado
+            const res = await fetch(`http://localhost:8080/api/rutas/rutaChoferId/${rutaId}`);
+            const data = await res.json();
+
+            console.log('Datos obtenidos del servidor:', data);
+
+            // Guardar ruta seleccionada globalmente para referencia posterior
+            rutaSeleccionada = data.ruta;
+            console.log('rutaSeleccionada:', rutaSeleccionada);
+
+            // Asignar datos de la ruta a los campos de formulario
+            modNombreRuta.value = data.ruta.nombreRuta;
+            modTipoServicio.value = data.ruta.tipoServicio;
+            modCapacidad.value = data.ruta.capacidad;
+            modNombreRuta.disabled = true; // nombre no editable
+
+            // Llenar select de choferes limpio primero
+            modChofer.innerHTML = '';
+            data.choferes.forEach(chofer => {
+                const option = document.createElement('option');
+                option.value = String(chofer.id); // siempre como string para comparación
+                option.textContent = `${chofer.nombre} ${chofer.apellidoPaterno} ${chofer.apellidoMaterno}`;
+                modChofer.appendChild(option);
+            });
+
+            // Ahora obtenemos el chofer asignado desde la propiedad choferIdAsignado
+            const choferActualId = data.choferIdAsignado ? String(data.choferIdAsignado) : '';
+            console.log('choferActualId:', choferActualId);
+            console.log('Valores opciones en el select:', Array.from(modChofer.options).map(option => option.value));
+
+            // Asignar la opción por defecto si existe en las opciones
+            if (choferActualId && Array.from(modChofer.options).some(option => option.value === choferActualId)) {
+                modChofer.value = choferActualId;
+                console.log('Valor asignado al select:', modChofer.value);
+            } else {
+                modChofer.selectedIndex = 0;
+                console.warn('El chofer asignado no coincide con ninguna opción del select, se selecciona la primera opción.');
+            }
+
+            // Mostrar el modal
+            modalModificar.classList.remove('hidden');
+        }
+
+
+        btnCancelarModificar.onclick = () => {
+            modalModificar.classList.add('hidden');
+            rutaSeleccionada = null;
+        };
+
+        formModificar.onsubmit = async (e) => {
+            e.preventDefault();
+
+            const data = {
+                nombreRuta: modNombreRuta.value,
+                tipoServicio: modTipoServicio.value,
+                capacidad: Number(modCapacidad.value),
+                ciudadId: rutaSeleccionada.ciudad.id,
+                choferId: Number(modChofer.value)
+            };
+
+            try {
+                const res = await fetch(`http://localhost:8080/api/rutas/${rutaSeleccionada.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!res.ok) throw new Error('Error actualizando ruta');
+                showCustomAlert('Ruta actualizada');
+                modalModificar.classList.add('hidden');
+                cargarRutas(selectCiudad.value); // refrescar tabla
+            } catch (err) {
+                showCustomAlert(err.message);
+            }
+
+        };
+
+        function showCustomAlert(message) {
+            const customAlert = document.getElementById('customAlert');
+            const customAlertMessage = document.getElementById('customAlertMessage');
+            customAlertMessage.textContent = message;
+            customAlert.classList.remove('hidden');
+            setTimeout(() => {
+                customAlert.classList.add('hidden');
+            }, 3000);
+        }
+
+
+        rutasTableBody.onclick = (e) => {
+            if (e.target.dataset.accion === 'modificar') {
+                const rutaId = Number(e.target.dataset.id);
+                mostrarModalModificar(rutaId);
+            } else if (e.target.dataset.accion === 'eliminar') {
+                rutaSeleccionada = rutas.find(r => r.id == e.target.dataset.id);
+                modalEliminar.classList.remove('hidden');
+            }
+        };
+
+        btnConfirmarEliminar.onclick = async () => {
+            try {
+                if (!rutaSeleccionada || !rutaSeleccionada.id) {
+                    showCustomAlert('No se ha seleccionado ruta válida para eliminar.');
+                    modalEliminar.classList.add('hidden');
+                    return;
+                }
+                const res = await fetch(`http://localhost:8080/api/rutas/${rutaSeleccionada.id}`, {
+                    method: 'DELETE'
+                });
+                if (!res.ok) throw new Error('Error eliminando ruta');
+                showCustomAlert('Ruta eliminada');
+                modalEliminar.classList.add('hidden');
+                cargarRutas(selectCiudad.value);
+            } catch (err) {
+                showCustomAlert(err.message);
+            }
+        };
+
+
+        btnCancelarEliminar.onclick = () => {
+            modalEliminar.classList.add('hidden');
+            rutaSeleccionada = null;
+        };
+
+        inputFiltroRuta.addEventListener('input', renderTablaRutas);
+
+        selectCiudad.addEventListener('change', () => {
+            cargarRutas(selectCiudad.value);
+        });
+
+        window.onload = async () => {
+            await cargarCiudades();
+            cargarRutas(selectCiudad.value);
+        };
+    </script>
+</body>
+
+</html>

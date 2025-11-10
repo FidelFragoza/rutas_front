@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sistema de rutas</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-10">
+  <main class="max-w-6xl mx-auto p-10">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 auto-rows-min">
+
+      <!-- Contenedor 1 -->
+      <a href="pages/alta_rutas.html"
+        class="relative rounded-xl overflow-hidden shadow-lg bg-white cursor-pointer flex flex-col h-full transform transition-transform duration-300 hover:scale-105">
+        <div class="absolute inset-0 bg-black opacity-10 backdrop-blur-sm"></div>
+        <img src="./public/preview_nuevas_rutas.png" alt="Imagen 1" class="w-full h-48 object-cover" />
+        <div class="absolute inset-0 flex flex-col justify-center items-center p-4 opacity-100">
+          <div class=" bg-green-300 opacity-90 rounded-md p-2">
+            <h3 class="text-black text-lg font-bold text-center">Alta de rutas</h3>
+          </div>
+        </div>
+      </a>
+
+
+      <!-- Contenedor 3 -->
+      <a href="pages/vista_rutas.html"
+        class="relative rounded-xl overflow-hidden shadow-lg bg-white cursor-pointer flex flex-col h-full transform transition-transform duration-300 hover:scale-105">
+        <div class="absolute inset-0 bg-black opacity-10 backdrop-blur-sm"></div>
+        <img src="./public/preview_administrar_rutas.png" alt="Imagen 2" class="w-full h-48 object-cover" />
+        <div class="absolute inset-0 flex flex-col justify-center items-center p-4 opacity-100">
+          <div class=" bg-red-300 opacity-90 rounded-md p-2">
+            <h3 class="text-black text-lg font-bold text-center">Vista de Rutas</h3>
+          </div>
+        </div>
+      </a>
+      
+      <!-- Contenedor 2 -->
+      <a href="pages/alta_empleados.html"
+        class="relative rounded-xl overflow-hidden shadow-lg bg-white cursor-pointer flex flex-col h-full transform transition-transform duration-300 hover:scale-105">
+        <div class="absolute inset-0 bg-black opacity-10 backdrop-blur-sm"></div>
+        <img src="./public/preview_nuevos_empleados.png" alt="Imagen 2" class="w-full h-48 object-cover" />
+        <div class="absolute inset-0 flex flex-col justify-center items-center p-4 opacity-100">
+          <div class=" bg-blue-300 opacity-90 rounded-md p-2">
+            <h3 class="text-black text-lg font-bold text-center">Alta de Empleados</h3>
+          </div>
+        </div>
+      </a>
+
+      <!-- Contenedor 4 -->
+      <a href="pages/vista_empleados.html"
+        class="relative rounded-xl overflow-hidden shadow-lg bg-white cursor-pointer flex flex-col h-full transform transition-transform duration-300 hover:scale-105">
+        <div class="absolute inset-0 bg-black opacity-10 backdrop-blur-sm"></div>
+        <img src="./public/preview_administrar_empleados.png" alt="Imagen 2" class="w-full h-48 object-cover" />
+        <div class="absolute inset-0 flex flex-col justify-center items-center p-4 opacity-100">
+          <div class=" bg-violet-300 opacity-90 rounded-md p-2">
+            <h3 class="text-black text-lg font-bold text-center">Vista de Empleados</h3>
+          </div>
+        </div>
+      </a>
+
+    </div>
+  </main>
+
+  <script type="module" src="/src/main.js"></script>
+
+</body>
+
+</html>
